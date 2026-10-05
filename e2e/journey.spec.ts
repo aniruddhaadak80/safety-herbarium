@@ -116,8 +116,23 @@ test.describe("primary journey", () => {
     // --- Marginalia persists --------------------------------------------------
     await sheetLink.click();
     await expect(page).toHaveURL(/\/sheet\/[0-9a-f-]{36}$/i, { timeout: 60_000 });
+
+    /**
+     * The note box is a controlled input, so typing into it before React hydrates
+     * gets the text discarded when hydration lands: the field snaps back to the
+     * stored value and "Save note" stays disabled. Slow to hit locally, easy to
+     * hit against production, and it looks like a broken button rather than a
+     * timing problem. Wait for the page to settle before writing to it.
+     */
+    await page.waitForLoadState("networkidle");
+
     const marginalia = page.getByLabel(/your note on this sheet/i);
-    await marginalia.fill("Chapter 3 is the clearest statement of the problem.");
+    const note = "Chapter 3 is the clearest statement of the problem.";
+    await marginalia.fill(note);
+
+    // The character counter is driven by React state, so it proves the fill
+    // reached the component rather than only the DOM.
+    await expect(page.getByText(`${note.length}/4000`)).toBeVisible();
     await page.getByRole("button", { name: /save note/i }).click();
     await expect(page.getByText(/saved|note/i).first()).toBeVisible();
 
