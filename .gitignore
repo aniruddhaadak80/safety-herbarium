@@ -21,12 +21,15 @@ next-env.d.ts
 .env*.local
 .env.production
 
-# test output
-coverage/
-playwright-report/
-test-results/
-blob-report/
-.playwright/
+# test output — root-anchored on purpose. A bare "coverage/" also matches
+# src/app/coverage/ and src/app/api/volumes/[id]/coverage/, which are source
+# directories, and silently drops them from every clone and every Git-connected
+# deploy while the working tree still looks complete.
+/coverage/
+/playwright-report/
+/test-results/
+/blob-report/
+/.playwright/
 
 # editors and os
 .DS_Store
