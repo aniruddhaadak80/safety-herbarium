@@ -55,7 +55,7 @@ test.describe("primary journey", () => {
     await page.getByLabel(/intent/i).fill("Proving the journey end to end.");
     await page.getByRole("button", { name: /create volume/i }).click();
 
-    await page.waitForURL(/\/volume\/[0-9a-f-]{36}$/i);
+    await expect(page).toHaveURL(/\/volume\/[0-9a-f-]{36}$/i, { timeout: 60_000 });
     const volumeUrl = page.url();
     await expect(page.getByRole("heading", { level: 1 })).toContainText(volumeName);
 
@@ -106,9 +106,16 @@ test.describe("primary journey", () => {
       expect(await statusSelect.inputValue()).toBe("read");
     }).toPass({ timeout: 20_000 });
 
+    /**
+     * The status change triggers a server refresh. Clicking before it settles can
+     * land on a node React is about to replace, which fails silently — and is slow
+     * to reproduce on a local server, so it only shows up against production.
+     */
+    await page.waitForLoadState("networkidle");
+
     // --- Marginalia persists --------------------------------------------------
     await sheetLink.click();
-    await page.waitForURL(/\/sheet\/[0-9a-f-]{36}$/i);
+    await expect(page).toHaveURL(/\/sheet\/[0-9a-f-]{36}$/i, { timeout: 60_000 });
     const marginalia = page.getByLabel(/your note on this sheet/i);
     await marginalia.fill("Chapter 3 is the clearest statement of the problem.");
     await page.getByRole("button", { name: /save note/i }).click();

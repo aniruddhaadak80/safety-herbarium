@@ -37,8 +37,10 @@ export function NewVolumeForm() {
         setError("error" in payload ? payload.error.message : "Could not create the volume.");
         return;
       }
+      // Push only: calling router.refresh() straight after a push races the
+      // navigation and can cancel it, which shows up as a form that fills in,
+      // succeeds, and never leaves the page.
       router.push(`/volume/${payload.volume.id}`);
-      router.refresh();
     } catch {
       setError("Network error. Nothing was created.");
     } finally {
