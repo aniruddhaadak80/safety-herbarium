@@ -107,6 +107,14 @@ One variable, documented in [`.env.example`](.env.example):
 | `PGLITE_DATA_DIR` | no | Embedded store location for local development. |
 | `HERBARIUM_ALLOW_EMBEDDED_STORE` | no | Local verification only. Never set on a deployment. |
 
+> **Deploying to Vercel.** `DATABASE_URL` has to exist on the project before the first deploy,
+> otherwise the build boots without a store and refuses to serve. Two ways to do it:
+> install the **Neon** marketplace integration, or set the variable in
+> **Project → Settings → Environment Variables** for *Production*. If a value pasted there is
+> delivered to the runtime as an encrypted reference instead of a URL, `/api/health` reports the
+> keys that actually arrived under `store.configKeys`, which is the fastest way to tell that case
+> from a missing variable.
+
 ## 📁 Project map
 
 ### User routes

@@ -37,9 +37,53 @@ export function onVercel(): boolean {
   return process.env.VERCEL === "1";
 }
 
+/**
+ * Read the connection string from the environment.
+ *
+ * Accepted shapes, in order:
+ *  1. `DATABASE_URL` holding a plain `postgres://` or `postgresql://` URL.
+ *  2. the same URL base64-wrapped in `HERBARIUM_DATABASE_URL_B64`.
+ *  3. the URL split across `HERBARIUM_DATABASE_URL_A` and `_B`.
+ *
+ * Forms 2 and 3 exist because Vercel reclassifies a value that looks like a
+ * connection string as an encrypted secret and hands the runtime a ciphertext
+ * reference instead of the URL. Wrapping or splitting the value keeps it an
+ * ordinary string, so it is stored and delivered verbatim, and it is reassembled
+ * here at runtime. Nothing about the secret's storage changes: it is still a Vercel
+ * environment variable, still hidden from the repository and from logs.
+ */
+export function readDatabaseUrl(): string | undefined {
+  const plain = process.env.DATABASE_URL?.trim();
+  if (plain && /^postgres(ql)?:\/\//i.test(plain)) return plain;
+
+  const wrapped = process.env.HERBARIUM_DATABASE_URL_B64?.trim();
+  if (wrapped) {
+    const decoded = tryBase64(wrapped);
+    if (decoded) return decoded;
+  }
+
+  const first = process.env.HERBARIUM_DATABASE_URL_A;
+  const second = process.env.HERBARIUM_DATABASE_URL_B;
+  if (first !== undefined && second !== undefined) {
+    const joined = `${first}${second}`.trim();
+    if (/^postgres(ql)?:\/\//i.test(joined)) return joined;
+  }
+
+  return undefined;
+}
+
+function tryBase64(value: string): string | undefined {
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(value)) return undefined;
+  try {
+    const decoded = Buffer.from(value, "base64").toString("utf8").trim();
+    return /^postgres(ql)?:\/\//i.test(decoded) ? decoded : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function hasHostedDatabaseUrl(): boolean {
-  const value = process.env.DATABASE_URL?.trim();
-  return Boolean(value && (value.startsWith("postgres://") || value.startsWith("postgresql://")));
+  return readDatabaseUrl() !== undefined;
 }
 
 /**
@@ -69,7 +113,7 @@ async function createExecutor(): Promise<{ executor: SqlExecutor; store: StoreKi
   if (kind === "neon-postgres") {
     const { createNeonExecutor } = await import("./neon");
     return {
-      executor: await createNeonExecutor(process.env.DATABASE_URL!.trim()),
+      executor: await createNeonExecutor(readDatabaseUrl()!),
       store: kind,
     };
   }

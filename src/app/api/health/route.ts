@@ -45,6 +45,18 @@ export const GET = route(async (req: NextRequest) => {
   }
 
   const kind = activeStoreKind();
+  /**
+   * Which configuration keys reached this runtime, by name only. No values are
+   * read, logged or returned: this exists so an operator can see whether a
+   * variable arrived at all, which is the question you cannot answer from a
+   * "store unreachable" error.
+   */
+  const configKeys = [
+    "DATABASE_URL",
+    "HERBARIUM_DATABASE_URL_B64",
+    "NEXT_PUBLIC_SITE_URL",
+  ].filter((key) => Boolean(process.env[key]));
+
   const body = {
     status: storeReachable ? "ok" : "degraded",
     version: nextVersion(),
@@ -58,6 +70,7 @@ export const GET = route(async (req: NextRequest) => {
       productionSafe: kind === "neon-postgres" || !onVercel(),
       error: storeError,
       latencyMs: Date.now() - startedAt,
+      configKeys,
     },
     chain: { algorithm: "SHA-384", genesisSeal: GENESIS_SEAL, selfTest: chainSelfTest },
     catalogue: {
