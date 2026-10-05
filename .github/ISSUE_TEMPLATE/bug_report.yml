@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work, or works incorrectly.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open /discover
+        2. Mount the first book
+        3. Open the volume
+    validations:
+      required: true
+  - type: input
+    id: surface
+    attributes:
+      label: Where
+      description: Which page or endpoint.
+    validations:
+      required: true
+  - type: dropdown
+    id: provenance
+    attributes:
+      label: Was the data live?
+      description: If arXiv was unreachable the interface labels records as a snapshot. This matters for reproducing data bugs.
+      options:
+        - Live (the interface said "Live from arXiv")
+        - Snapshot (the interface warned it was a sealed offline copy)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console or network errors
+      description: Only if there are any. Please redact anything you consider sensitive.

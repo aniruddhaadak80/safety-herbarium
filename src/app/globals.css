@@ -1,26 +1,230 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Identity: an archival herbarium press sheet.
+ *
+ * The concept is a botanist's mounting table: sheets of rag paper laid on a
+ * green cutting mat, gummed straps holding each specimen down, an inked label
+ * block in the corner, and a handwritten note in the wide outer margin. Data
+ * lives on paper, decisions are stamped, and every record has an accession
+ * number, because that is how a herbarium stays auditable.
+ *
+ * Delta against recent builds: the last three were a debate stage (vermilion and
+ * lapis), a chalk drafting sheet (graphite on white) and a lifeguard noticeboard
+ * (sea-glass teal). None used a warm paper ground, a botanical field green, a
+ * right-hand marginalia rail, or letterpress small-caps labels. This one does all
+ * four.
+ */
+
+@theme {
+  /* Rag paper: the ground everything is mounted on. */
+  --color-paper: #f4efe4;
+  --color-paper-deep: #e9e0cf;
+  --color-paper-edge: #d8cbb2;
+
+  /* Iron-gall ink, warm and slightly brown from age. */
+  --color-ink: #23201a;
+  --color-ink-soft: #4a4438;
+  --color-ink-faint: #7d7466;
+
+  /* The cutting mat: field green. Reserved for verified and live. */
+  --color-field: #2f4f3a;
+  --color-field-bright: #4a7d5c;
+
+  /* Gummed linen straps and pencil ruling. */
+  --color-strap: #b98a4b;
+  --color-rule: #c2b49a;
+
+  /* Mounting labels and stamps. */
+  --color-label: #7a1f1f;
+  --color-stamp: #8c2f39;
+
+  /* Status inks, used only for state. */
+  --color-live: #2f7d4f;
+  --color-caution: #a5701c;
+  --color-fallback: #6b5b8a;
+
+  --font-display: var(--font-bodoni), "Bodoni Moda", Didot, Georgia, serif;
+  --font-body: var(--font-spectral), "Spectral", Georgia, serif;
+  --font-mono: var(--font-mono-jakarta), "IBM Plex Mono", ui-monospace, monospace;
+
+  --spacing-sheet: 2.5rem;
+  --radius-plate: 2px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  border-color: var(--color-rule);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-feature-settings: "onum" 1, "kern" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+ * Laid paper: two faint horizontal wires, as in a real pressing sheet. Fixed so
+ * it reads as the surface rather than as content.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      color-mix(in oklab, var(--color-rule) 26%, transparent) 31px,
+      color-mix(in oklab, var(--color-rule) 26%, transparent) 32px
+    ),
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 127px,
+      color-mix(in oklab, var(--color-rule) 12%, transparent) 127px,
+      color-mix(in oklab, var(--color-rule) 12%, transparent) 128px
+    );
+  opacity: 0.55;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-field) 26%, transparent);
+}
+
+/* Letterpress small-caps label: the voice of the herbarium's own labelling. */
+@utility label-caps {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+@utility label-stamp {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-stamp);
+  border: 1px solid currentColor;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-plate);
+  display: inline-block;
+}
+
+/* The mounted sheet: paper on a mat, with a hairline edge and a soft shadow. */
+@utility sheet {
+  background: var(--color-paper);
+  border: 1px solid var(--color-paper-edge);
+  border-radius: var(--radius-plate);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--color-ink) 6%, transparent),
+    0 10px 24px -18px color-mix(in oklab, var(--color-ink) 45%, transparent);
+}
+
+/*
+ * Gummed straps: the linen strips that hold a specimen sheet to the mat. Used to
+ * mark the four corners of a mounted record rather than as decoration.
+ */
+@utility strap {
+  position: relative;
+}
+
+@utility strap-tl {
+  border-top: 2px solid color-mix(in oklab, var(--color-strap) 55%, transparent);
+}
+
+@utility focus-ring {
+  outline: 2px solid var(--color-field);
+  outline-offset: 2px;
+}
+
+a,
+button,
+input,
+textarea,
+select,
+summary,
+[tabindex]:not([tabindex="-1"]) {
+  &:focus-visible {
+    outline: 2px solid var(--color-field);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+}
+
+/* The outer margin rail: where a reader's own notes live on a real sheet. */
+@utility margin-rail {
+  border-left: 1px solid var(--color-rule);
+  padding-left: 1.25rem;
+}
+
+/* Handwritten marginalia, kept legible rather than decorative. */
+@utility marginalia {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--color-ink-soft);
+  border-left: 2px solid var(--color-strap);
+  padding-left: 0.75rem;
+}
+
+/* A stamped determination label. */
+@utility determination {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--color-label);
+}
+
+/* Tabular readouts: accession numbers, scores, coverage percentages. */
+@utility figure {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Coverage bar: a measured length on a ruled scale, never a gradient. */
+@utility bar-track {
+  background: color-mix(in oklab, var(--color-ink) 8%, transparent);
+  border: 1px solid var(--color-rule);
+  border-radius: 1px;
+  height: 0.5rem;
+  overflow: hidden;
+}
+
+@utility bar-fill {
+  height: 100%;
+  background: var(--color-field);
+}
+
+@utility bar-fill-gap {
+  height: 100%;
+  background: var(--color-caution);
+}
+
+@utility scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-rule) transparent;
 }

@@ -1,0 +1,33 @@
+name: Feature request
+description: A capability that would help someone read AI-safety literature better.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that this app does not let you do? Describe the situation, not the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like to happen
+    validations:
+      required: true
+  - type: textarea
+    id: engagement
+    attributes:
+      label: Who hits this
+      description: Just you, or a whole kind of reader?
+  - type: checkboxes
+    id: fits
+    attributes:
+      label: Before proposing, does it survive these?
+      options:
+        - label: It does real work against persisted or live data, not decoration.
+          required: false
+        - label: It needs no API key a visitor does not have.
+          required: false
+        - label: The interface and the MCP tools would share the implementation.
+          required: false

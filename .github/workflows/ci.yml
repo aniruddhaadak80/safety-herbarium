@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref: a new push makes the old run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # The lockfile is committed, so CI installs exactly what was reviewed.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # Needs no DATABASE_URL and no API keys: the tests run against the embedded
+      # Postgres adapter and every live source is keyless.
+      - name: Test
+        run: npm run test
+
+      # The production build must succeed without a database URL. The adapter
+      # refuses to open the embedded store in a production runtime, which is the
+      # point: the build proves the hosted path is the only one selected.
+      - name: Build
+        run: npm run build
+
+      - name: Browser smoke test
+        run: npx playwright install --with-deps chromium
+      - name: Primary journey
+        run: npm run test:e2e
+        env:
+          BASE_URL: http://localhost:3000
+          HERBARIUM_ALLOW_EMBEDDED_STORE: "1"
