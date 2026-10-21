@@ -50,5 +50,4 @@ jobs:
       - name: Primary journey
         run: npm run test:e2e
         env:
-          BASE_URL: http://localhost:3000
           HERBARIUM_ALLOW_EMBEDDED_STORE: "1"
